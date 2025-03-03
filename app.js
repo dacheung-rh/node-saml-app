@@ -6,9 +6,10 @@ var cookieParser = require('cookie-parser');
 var passport = require('passport');
 var saml = require('@node-saml/passport-saml');
 var fs = require('fs');
+const config = require('config');
 
-//declare constants
-const PORT = process.env.PORT || 3000;
+//declare constantss
+const PORT = config.get('app.port') || 3000;
 
 /** SAML Configurations attributes
  * callbackurl : apps url for IDP to response post authetication
@@ -17,11 +18,11 @@ const PORT = process.env.PORT || 3000;
  * entityId : Apps Id
  */
 const samlConfig = {
-    issuer: "EnterpriseCustomApp",
-    entityId: "Saml-SSO-App",
-    callbackUrl: "https://192.168.1.88:3000/login/callback",
-    signOut: "https://192.168.1.88:3000/signout/callback",
-    entryPoint: "https://192.168.1.88:8443/realms/EnterpriseApps/protocol/saml",
+    issuer: config.get('saml.issuer'),
+    entityId: config.get('saml.entityId'),
+    callbackUrl: config.get('saml.callbackUrl'),
+    logoutUrl: config.get('saml.logoutUrl'),
+    entryPoint: config.get('saml.entryPoint')
 };
 
 // For running apps on https mode
@@ -48,13 +49,19 @@ passport.deserializeUser(function (user, done) {
 const samlStrategy = new saml.Strategy({
     callbackUrl: samlConfig.callbackUrl,
     entryPoint: samlConfig.entryPoint,
+    logoutUrl: samlConfig.logoutUrl,
     issuer: samlConfig.issuer,
     identifierFormat: null,
     decryptionPvk: sp_pvk_key,
-    idpCert: idp_cert,
-    privateCert: fs.readFileSync('sp-pvt-key.pem', 'utf8'),
+    // idpCert: idp_cert,
+    idpCert: [idp_cert,idp_cert],
+    privateKey: fs.readFileSync('sp-pvt-key.pem', 'utf8'),
+    publicCert: sp_pub_cert,
+    signatureAlgorithm: 'sha256',
     validateInResponseTo: 'ifPresent',
     disableRequestedAuthnContext: true,
+    WantAssertionsSigned: true,
+    wantAuthnResponseSigned: true,
 }, (profile, done) => {
     console.log('passport.use() profile: %s \n', JSON.stringify(profile));
     return done(null, profile);
@@ -82,14 +89,14 @@ app.use(passport.session({}));
 /** Configure routes **/
 // default route
 app.get('/',
-    (req, res) => {
+    function (req, res) {
         res.send('Weclome to Single Sign-On Application');
     }
 );
 
 //login route
 app.get('/login',
-    (req, res, next) => {
+    function (req, res, next) {
 
         //login handler starts
         next();
@@ -99,13 +106,13 @@ app.get('/login',
 
 //post login callback route
 app.post('/login/callback',
-    (req, res, next) => {
+    function (req, res, next) {
 
         //login callback starts
         next();
     },
     passport.authenticate('samlStrategy'),
-    (req, res) => {
+    function (req, res) {
 
         //SSO response payload
         res.send(req.user.attributes);
@@ -117,7 +124,7 @@ const server = https.createServer({
     'key': sp_pvk_key,
     'cert': sp_pub_cert
 }, app).listen(PORT, () => {
-    console.log('Listening on https://localhost:%d', server.address().port)
+    console.log('Listening on port %d', server.address().port)
 });
 
 

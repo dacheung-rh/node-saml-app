@@ -10,6 +10,7 @@
   "dependencies": {
     "@node-saml/passport-saml": "^5.0.0",
     "body-parser": "^1.20.0",
+    "config": "^3.3.12",
     "cookie": "^1.0.2",
     "cookie-parser": "^1.4.6",
     "express": "^4.17.3",

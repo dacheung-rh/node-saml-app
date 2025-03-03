@@ -7,7 +7,7 @@ openssl req -newkey rsa:2048 -nodes  -keyout idp-server.key.pem -x509 -days 3650
 ```
 
 ```
-chmod 755 server.key.pem
+chmod 755 idp-server.key.pem
 ```
 
 #### Run Keycloak in docker
@@ -72,6 +72,10 @@ https://{KEYCLOAK-IP-Address}:{PORT}/realms/{IDP_REALM}/protocol/saml/descriptor
 e.g.
 ```
 <ds:X509Certificate>MIICqzCCAZMCBgGVT/dvizANBgkqhkiG9w0BAQsFADAZMRcwFQYDVQQDDA5 ... W==</ds:X509Certificate>
+```
+
+```
+cat "MIICqzCCAZMCBgGVT/dvizANBgkqhkiG9w0BAQsFADAZMRcwFQYDVQQDDA5 ... W==" > idp-pub-key.pem
 ```
 
 
