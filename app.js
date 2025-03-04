@@ -21,7 +21,7 @@ const samlConfig = {
     issuer: config.get('saml.issuer'),
     entityId: config.get('saml.entityId'),
     callbackUrl: config.get('saml.callbackUrl'),
-    logoutUrl: config.get('saml.logoutUrl'),
+    logoutCallbackUrl: config.get('saml.logoutCallbackUrl'),
     entryPoint: config.get('saml.entryPoint')
 };
 
@@ -49,12 +49,12 @@ passport.deserializeUser(function (user, done) {
 const samlStrategy = new saml.Strategy({
     callbackUrl: samlConfig.callbackUrl,
     entryPoint: samlConfig.entryPoint,
-    logoutUrl: samlConfig.logoutUrl,
+    logoutCallbackUrl: samlConfig.logoutCallbackUrl,
     issuer: samlConfig.issuer,
     identifierFormat: null,
     decryptionPvk: sp_pvk_key,
-    // idpCert: idp_cert,
-    idpCert: [idp_cert,idp_cert],
+    idpCert: idp_cert,
+    // idpCert: [idp_cert1,idp_cert2],
     privateKey: fs.readFileSync('sp-pvt-key.pem', 'utf8'),
     publicCert: sp_pub_cert,
     signatureAlgorithm: 'sha256',
@@ -62,7 +62,7 @@ const samlStrategy = new saml.Strategy({
     disableRequestedAuthnContext: true,
     WantAssertionsSigned: true,
     wantAuthnResponseSigned: true,
-}, (profile, done) => {
+}, function (profile, done) {
     console.log('passport.use() profile: %s \n', JSON.stringify(profile));
     return done(null, profile);
 });
@@ -96,27 +96,23 @@ app.get('/',
 
 //login route
 app.get('/login',
-    function (req, res, next) {
-
-        //login handler starts
-        next();
-    },
-    passport.authenticate('samlStrategy'),
+    passport.authenticate("samlStrategy", { failureRedirect: "/", failureFlash: true }),
+    function (req, res) {
+      res.redirect("/");
+    },    
 );
 
 //post login callback route
 app.post('/login/callback',
-    function (req, res, next) {
-
-        //login callback starts
-        next();
-    },
-    passport.authenticate('samlStrategy'),
+    bodyParser.urlencoded({ extended: false }),
+    passport.authenticate("samlStrategy", {
+      failureRedirect: "/",
+      failureFlash: true,
+    }),
     function (req, res) {
-
-        //SSO response payload
-        res.send(req.user.attributes);
-    }
+    //   res.redirect("/");
+      res.send(req.user.attributes);
+    },    
 );
 
 //Run the https server
