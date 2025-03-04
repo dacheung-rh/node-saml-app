@@ -27,13 +27,13 @@ const samlConfig = {
 
 // For running apps on https mode
 // load the public certificate
-const sp_pub_cert = fs.readFileSync('sp-pub-cert.pem', 'utf8');
+const sp_pub_cert = fs.readFileSync('./certs/sp-pub-cert.pem', 'utf8');
 
 //load the private key
-const sp_pvk_key = fs.readFileSync('sp-pvt-key.pem', 'utf8');
+const sp_pvk_key = fs.readFileSync('./certs/sp-pvt-key.pem', 'utf8');
 
 //Idp's certificate from metadata
-const idp_cert = fs.readFileSync('idp-pub-key.pem', 'utf8');
+const idp_cert = fs.readFileSync('./certs/idp-pub-key.pem', 'utf8');
 
 passport.serializeUser(function (user, done) {
     //Serialize user, console.log if needed
@@ -55,7 +55,7 @@ const samlStrategy = new saml.Strategy({
     decryptionPvk: sp_pvk_key,
     idpCert: idp_cert,
     // idpCert: [idp_cert1,idp_cert2],
-    privateKey: fs.readFileSync('sp-pvt-key.pem', 'utf8'),
+    privateKey: fs.readFileSync('./certs/sp-pvt-key.pem', 'utf8'),
     publicCert: sp_pub_cert,
     signatureAlgorithm: 'sha256',
     validateInResponseTo: 'ifPresent',
