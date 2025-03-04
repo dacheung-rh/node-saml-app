@@ -39,7 +39,7 @@ spec:
           - name: app-certs
             mountPath: /usr/src/nodesamlapp/certs
           - name: node-config
-            mountPath: /usr/src/nodesamlapp/conf
+            mountPath: /usr/src/nodesamlapp/config
 ---
 apiVersion: v1
 kind: Service
