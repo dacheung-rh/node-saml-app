@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-saml-app
+  namespace: node-saml-demo
+  labels:
+    app: node-saml-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-saml-app
+  template:
+    metadata:
+      labels:
+        app: node-saml-app
+    spec:
+      volumes:
+        - name: app-certs
+          secret:
+            secretName: app-certs-secret
+            defaultMode: 420
+        - name: node-config
+          configMap:
+            name: app-config
+      containers:
+      - name: nginx
+        resources:
+          limits:
+            memory: 250Mi
+            cpu: 500m
+          requests:
+            memory: 50Mi
+            cpu: 50m
+        image: registry.gitlab.cheers.local/dacheung-rh/node-saml-app:latest
+        ports:
+          - containerPort: 3000
+        volumeMounts:
+          - name: app-certs
+            mountPath: /usr/src/nodesamlapp/certs
+          - name: node-config
+            mountPath: /usr/src/nodesamlapp/conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-saml-app
+  namespace: node-saml-demo
+spec:
+  selector:
+    app: node-saml-app
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: v1
+data:
+  tls.crt: LS01tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZSakNDQkM2Z0F3SUJBZ0lUSndBQUFlM3diT0Z0THBXcXZ3QUFBQUFCN1RBTkJna3Foa2lHOXcwQkFRc0YKQURDQmdURUxNQWtHQTFVRUJoTUNTRXN4RWpBUUJnTlZCQWNUQ1VodmJtY2dTMjl1WnpFa01DSUdBMVVFQ2hNYgpWR2hsSUVkdmRtVnlibTFsYm5RZ2IyWWdkR2hsSUVoTFUwRlNNUjR3SEFZRFZRUUxFeFZJYjI1bklFdHZibWNnClQySnpaWEoyWVhSdmNua3hHREFXQmdOVkJBTVREMGhMVHlCU2IyOTBJRU5CSURJMU5qQWVGdzB5TkRBMU1qRXcKTmpBd01qTmFGdzB5TmpBNE1qUXdOakF3TWpOYU1Hb3hDekFKQmdOVkJBWVRBa05PTVE0d0RBWURWUVFIRXdWSQpTMU5CVWpFZU1Cd0dBMVVFQ2hNVlNHOXVaeUJMYjI1bklFOWljMlZ5ZG1GMGIzSjVNUXN3Q1FZRFZRUUxFd0pTCk5URWVNQndHQTFVRUF3d1ZLaTV6WlhKMmFXTmxjeTVvYTI4dVoyOTJMbWhyTUlJQklqQU5CZ2txaGtpRzl3MEIKQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBemtVWXY2bTJ4cjJ5czZzdzBkd25BTlNmTVhoUTN6eW5nUjdORWRGWApqVWtzR09OSjNwRm5ON1dPdEhQNHVQcTh4TC9aRUFoME51S0RrL3VSRGZlTUU2WWFPMFBPMVpnRFZZY2lCSDdTCm9TamEveEpuUi84YmdqUDdraUlTbm9QeHVzZUo5eGM4bUFjWlhka0hvcTdCZG5JeCtNL2x3cFhwTDVDNTJyajYKOWc3ZWs1a1piT1JHYXZUWDFHOFRzakVBNWxkS3M3bjQ0SGY2bHoyMXZvL21WT291aFBVb2JQZldPQXQzbDdKYQplNEtiT3dUcHRxOEN1b0tCVWw0YkRTTy9MdW95VzJhSVZYbGFJOHhUNzRtZnlDcGQzVHhWOGVSYXFPQ2kyRnNiCnlrbk9LMkIzakl0REJxbnE2dXRNZndpYnJnMG9BbXlVbllQYU9qRzVicjd5QndJREFRQUJvNElCeXpDQ0FjY3cKTlFZRFZSMFJCQzR3TElJVGMyVnlkbWxqWlhNdWFHdHZMbWR2ZGk1b2E0SVZLaTV6WlhKMmFXTmxjeTVvYTI4dQpaMjkyTG1ock1CMEdBMVVkRGdRV0JCVGM5ZFYxSjZLcjR1NkJMMUphS3RtOFhsSStBVEFmQmdOVkhTTUVHREFXCmdCUU5uTFRGUEk2UlNXdk9iRUtOak5mYnVtVERDVENCekFZSUt3WUJCUVVIQVFFRWdiOHdnYnd3Z2JrR0NDc0cKQVFVRkJ6QUNob0dzYkdSaGNEb3ZMeTlEVGoxSVMwOGxNakJTYjI5MEpUSXdRMEVsTWpBeU5UWXNRMDQ5UVVsQgpMRU5PUFZCMVlteHBZeVV5TUV0bGVTVXlNRk5sY25acFkyVnpMRU5PUFZObGNuWnBZMlZ6TEVOT1BVTnZibVpwClozVnlZWFJwYjI0c1JFTTlZV1FzUkVNOWFHdHZMRVJEUFdocmMyRnlaejlqUVVObGNuUnBabWxqWVhSbFAySmgKYzJVL2IySnFaV04wUTJ4aGMzTTlZMlZ5ZEdsbWFXTmhkR2x2YmtGMWRHaHZjbWwwZVRBT0JnTlZIUThCQWY4RQpCQU1DQmFBd1BRWUpLd1lCQkFHQ054VUhCREF3TGdZbUt3WUJCQUdDTnhVSWdvbmxGNGJFOHdPR29ZTXBocVAvClNvUzJzSHdQaDVpM1lZT1V6U29DQVdRQ0FRc3dFd1lEVlIwbEJBd3dDZ1lJS3dZQkJRVUhBd0V3R3dZSkt3WUIKQkFHQ054VUtCQTR3RERBS0JnZ3JCZ0VGQlFjREFUQU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFhamkxVDQwcApEMklmSitCYThJSFB0dGRlU21MbWFxc3VzbnlZcEJ1TnBlV1pZQmlaQkx2Rkk2TEMwMlpoYTNhTWx4S1MrWEdFCk5rUGgvMlo3bUJseDF0L0NLMWp3Z3pHZ0ZGNzhJUlpEcGpCWURTVnJrUlpRM0h0Y1VKaGJPemZYQ1BvT3NsTVkKL2pMdmFjVmhmQTE2bGFKZWYwMkR2WVozM2FybXhLQ3ppRUVXRktBaFJMVzUvVkpFUXBYUzM3S0VTVzgvSGV6YgpVTEIzSGh4TEJlSFlUWE9yZGdsOHdsdHJoZjJlajFrTFYyUnhmdi9oQmN1N2k5NkVTVFRqT094WWpCSUtWZU0vCmVGRUtzWis3WTNWbkw3d2pPZVorM0c1TTVVcVoyOEtyVVNGQ2RwTHNWMEJqWEs0dUN0aUhLYlZhRDdwbUYyVTEKTmc4ZEVMbGZtdEI1U0E9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCgo=
+  tls.key: LS0t1LS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2QUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktZd2dnU2lBZ0VBQW9JQkFRRE9SUmkvcWJiR3ZiS3oKcXpEUjNDY0ExSjh4ZUZEZlBLZUJIczBSMFZlTlNTd1k0MG5la1djM3RZNjBjL2k0K3J6RXY5a1FDSFEyNG9PVAorNUVOOTR3VHBobzdRODdWbUFOVmh5SUVmdEtoS05yL0VtZEgveHVDTS91U0loS2VnL0c2eDRuM0Z6eVlCeGxkCjJRZWlyc0YyY2pINHorWENsZWt2a0xuYXVQcjJEdDZUbVJsczVFWnE5TmZVYnhPeU1RRG1WMHF6dWZqZ2QvcVgKUGJXK2orWlU2aTZFOVNoczk5WTRDM2VYc2xwN2dwczdCT20ycndLNmdvRlNYaHNOSTc4dTZqSmJab2hWZVZvagp6RlB2aVovSUtsM2RQRlh4NUZxbzRLTFlXeHZLU2M0cllIZU1pME1HcWVycTYweC9DSnV1RFNnQ2JKU2RnOW82Ck1ibHV2dklIQWdNQkFBRUNnZ0VBRFJmVnVsVExoVklGUmVKWDl2cENmNHIvaitSVFBkaGJ5WlpxN2ZhYjJCd00KOElkODZPUFI2WGRjMTVlRThqajRRb1RyQWxtSEJ2VFo1VXJTcWxCTVUvTDNOMHZXbFRoUS9keldDL01BNjducwpMTVMrU1pPbjYxdmhYQ1ZOaVVKVzFjUlV2WnA3L2lwMU1iL1UvRDZiaVNrMmd0U3ZnT3FESXNITkNsVXptT3E3Cmh4SlRkMHZtVnVMNTM4WXo5ZFo5dm50ek1BdTFYTDNzbmlPclZ5V0dmT0orWUN4TEVSMWxBcmRVQXc5MGRWUGUKemdGVEtFU1Y1eU9wVE5ld1JhdzM3anlUdDg0L3ducUM1SndMU3JmajNNTzJ1RXJhSnFXeDZqaXk1UW80TllpQQp5RDdrMXVzWVpPNXhMWTFuUGw4b09Yalk3ZmdqQ2dRU3haSTl4c2g2QVFLQmdRRHNKRUFUTHZ1YWU3UllGWGIrCkoxQ2pQREc3K2RQNy93REtIbmk1NEVYcnVIUFpCUHZjZFlOUmh3d1p4M0taVmx4cnZsMWdFdElKdWo5T20yT3cKNVExMVQwL2g0cUtQb1NFc201UlN2aTdyd0RsWWkvNEVWQnMrQ0hBM0YzTTlEaWZRczVlelY4c2huVlBoVDVFUQpmc01IL0xUYUk1SmFBZmtaTHlsWnpGUzQyd0tCZ1FEZm5jRzYwYVBrM3V6Q2g5TnNicW45MmRPN1Q2QzdZRWRhCkVWNEFJRFIyaGo5OHVHektLQ3BMazY4eTFmR0IxZDRONVFRRkhINlA2UWNjQ2FBQjh5SkFYbGM5Zm8xYUl2bFQKQUdoQnd1R3UwazVZUlZUUWlocE8yT1RJY2xCb21LU09LUWp5SUJQZGVLdFN0d0pPK0FBL2VDdlpSRFBFVWo0bQoyWDVTUjNJTlJRS0JnRFp6aFhMbStvMTh5UEVtd2ZHSkQwY1Vza011TUh1REthTnhzMVRwS2paWXFoMzQwRHJkCnZoSW1tZHUzNmUwQnhQM3pQNFRQMGk3OEMyME0xOGdLaVRmcnVmZlVVcmZiNTlKcGJhSkd5SHNFTURVQzB1Z2MKbk11SkZwY2RpUzBpL250WmJqbWtuT3A3Wk1Rbm5NTzQ5eS80VFp1ZmFEZnBESStLR0hia2J3VFJBb0dBQ0dkbQpZMzREZWRPQzlHQ2thbnZTT2E4WkRQNFdIVlNsK2RXVFFjLzBDTXhNMElRaDJvc2Q0ODgrRTF3RkFvc21HRUdXCklCY05EcDJFWGVKaXVCQUtKbjhsS2pONlhudllBTzJQL1lDMGVKeUF3MEoveUlLWU1JUm9QTHhIRjFjOVAvWjgKMXBTc0NuUEJoSTlLTCt1VUhzNkdYMWozMVJYK0xmbVlqTUVRb1QwQ2dZQlc4ZmRLVC9nWjZPNlJnUVRBMUlmYgpkYSs5VzA3d2xuZUVXcGhRK1RNSWUyMEZLd2FSSzVWOFFxeVl3bjVzWGxmK2kxOVY3MW9sWDdDTHFrKzdrNnRhCmdBNzVldW1RRk82a0lTUHpwNDJwTVRGTVhhbUk1d1JFT1hRT0QxYXFlanZNZHZKdHFveHpCYmwrZjNBdUpPQ20KN0d2SlhoT21JSEdZa09MSjNMMlhkZz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K
+kind: Secret
+metadata:
+  name: node-saml-demo-certs
+  namespace: node-saml-demo
+type: kubernetes.io/tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: node-saml-app
+  namespace: node-saml-demo
+spec:
+  ingressClassName: haproxy
+  rules:
+  - host: node-saml-demo.apps.cheers.local
+    http:
+      paths:
+      - backend:
+          service:
+            name: node-saml-app
+            port:
+              number: 3000
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - node-saml-demo.apps.cheers.local
+    secretName: node-saml-demo-certs
