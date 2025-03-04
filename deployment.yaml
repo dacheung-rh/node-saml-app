@@ -24,7 +24,7 @@ spec:
           configMap:
             name: app-config
       containers:
-      - name: nginx
+      - name: nodejs
         resources:
           limits:
             memory: 250Mi
