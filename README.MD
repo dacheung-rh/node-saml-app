@@ -101,3 +101,17 @@ node app.js
 
 - Go the browser and navigate to home page : http://localhost:8080/
 - Navigate to login page: http://localhost:8080/login app will redirect to IDP for login process and post login it will redirect to call back url with SAML assertion token with claims container user details
+
+
+#### Deploy in Kubernetes
+```
+kubectl create configmap app-config --from-file=./config -n node-saml-demo
+```
+
+```
+kubectl create secret generic app-certs-secret --from-file=./certs -n node-saml-demo
+```
+
+```
+kubectl apply -f deployment.yaml
+```
